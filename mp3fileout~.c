@@ -32,6 +32,7 @@
 
 #include <m_pd.h>
 #include <m_imp.h>
+#include <s_stuff.h>
 #include <g_canvas.h>
 
 #include <sys/types.h>
