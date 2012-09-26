@@ -383,7 +383,7 @@ static void mp3cast_tilde_lame_init(t_mp3cast *x)
     lame_set_original( x->lgfp, 1 );
     lame_set_copyright( x->lgfp, 1 ); /* viva free music societies !!! */
     lame_set_disable_reservoir( x->lgfp, 0 );
-    lame_set_padding_type( x->lgfp, PAD_NO );
+    //lame_set_padding_type( x->lgfp, PAD_NO ); /* deprecated function */
     ret = lame_init_params( x->lgfp );
     if ( ret<0 )
     {
