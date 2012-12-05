@@ -190,7 +190,7 @@ static void audience_draw_new(t_audience_tilde *x, t_glist *glist)
     // create speaker images
     for ( ei=0; ei<x->x_nbinputs; ei++ )
     {
-        SYS_VGUI6("image create photo %xSPEAKER%d -file %s/examples/speaker.gif -format gif -width %d -height %d\n",
+        SYS_VGUI6("image create photo %xSPEAKER%d -file {%s/examples/speaker.gif} -format gif -width %d -height %d\n",
                   x, ei, audience_class_tilde->c_externdir->s_name, SPEAKER_WIDTH, SPEAKER_HEIGHT );
         SYS_VGUI8(".x%lx.c create image %d %d -image %xSPEAKER%d -tags %xISPEAKER%d\n",
                   canvas,
@@ -204,7 +204,7 @@ static void audience_draw_new(t_audience_tilde *x, t_glist *glist)
     // create listener images
     for ( ei=0; ei<x->x_nboutputs; ei++ )
     {
-        SYS_VGUI6("image create photo %xLISTENER%d -file %s/examples/wanderer.gif -format gif -width %d -height %d\n",
+        SYS_VGUI6("image create photo %xLISTENER%d -file {%s/examples/wanderer.gif} -format gif -width %d -height %d\n",
                   x, ei, audience_class_tilde->c_externdir->s_name, LISTENER_WIDTH, LISTENER_HEIGHT );
         SYS_VGUI8(".x%lx.c create image %d %d -image %xLISTENER%d -tags %xILISTENER%d\n",
                   canvas,
