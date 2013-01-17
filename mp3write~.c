@@ -57,6 +57,13 @@
 #include <lame/lame.h>        /* lame encoder stuff */
 #include "m_pd.h"            /* standard pd stuff */
 
+/* support older Pd versions without sys_fopen(), sys_fclose(), and, sys_close() */
+#if PD_MAJOR_VERSION == 0 && PD_MINOR_VERSION < 44
+#define sys_fopen fopen
+#define sys_fclose fclose
+#define sys_close close
+#endif
+
 #define        MY_MP3_MALLOC_IN_SIZE        65536
 /* max size taken from lame readme */
 #define        MY_MP3_MALLOC_OUT_SIZE       1.25*MY_MP3_MALLOC_IN_SIZE+7200

@@ -59,6 +59,12 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+/* support older Pd versions without sys_fopen(), sys_fclose(), and, sys_close() */
+#if PD_MAJOR_VERSION == 0 && PD_MINOR_VERSION < 44
+#define sys_fopen fopen
+#define sys_fclose fclose
+#define sys_close close
+#endif
 
 #include "mpg123.h"      /* mpg123 decoding library from lame 3.92 */
 #include "mpglib.h"      /* mpglib decoding library from lame 3.92 */

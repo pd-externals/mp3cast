@@ -48,6 +48,13 @@
 #include <unistd.h>
 #endif
 
+/* support older Pd versions without sys_fopen(), sys_fclose(), and, sys_close() */
+#if PD_MAJOR_VERSION == 0 && PD_MINOR_VERSION < 44
+#define sys_fopen fopen
+#define sys_fclose fclose
+#define sys_close close
+#endif
+
 /* needed to create a pianoroll from PD's menu
 void canvas_objtext(t_glist *gl, int xpos, int ypos, int selected, t_binbuf *b);
 void canvas_startmotion(t_canvas *x);

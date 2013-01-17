@@ -53,6 +53,13 @@
 #include "m_pd.h"            /* standard pd stuff */
 #include "g_canvas.h"        /* some pd's graphical functions */
 
+/* support older Pd versions without sys_fopen(), sys_fclose(), and, sys_close() */
+#if PD_MAJOR_VERSION == 0 && PD_MINOR_VERSION < 44
+#define sys_fopen fopen
+#define sys_fclose fclose
+#define sys_close close
+#endif
+
 static char   *blinkenlights_version = "blinkenlights: a blinkenlights movies player version 0.2 ( bugs @ ydegoyon@free.fr and chun@goto10.org )";
 
 static int guidebug=0;
