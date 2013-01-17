@@ -418,11 +418,7 @@ static void mp3write_open(t_mp3write *x, t_symbol *sfile)
     /* closing previous file descriptor */
     if ( x->x_fd > 0 )
     {
-#ifdef _WIN32
-        if(_close(x->x_fd) < 0 )
-#else
-        if(close(x->x_fd) < 0)
-#endif
+        if(sys_close(x->x_fd) < 0)
         {
             perror( "mp3write~ : closing file" );
         }
@@ -433,11 +429,13 @@ static void mp3write_open(t_mp3write *x, t_symbol *sfile)
         x->x_recflag = 0;
     }
 
+
 #ifdef _WIN32
-    if ( ( x->x_fd = _open( sfile->s_name, x->x_file_open_mode, _S_IREAD|_S_IWRITE) ) < 0 )
+    int mode = _S_IREAD|_S_IWRITE;
 #else
-    if ( ( x->x_fd = open( sfile->s_name, x->x_file_open_mode, S_IRWXU|S_IRWXG|S_IRWXO ) ) < 0 )
+    int mode = S_IRWXU|S_IRWXG|S_IRWXO;
 #endif
+    if ( ( x->x_fd = sys_open( sfile->s_name, x->x_file_open_mode, mode) ) < 0 )
     {
         error( "mp3write~ : cannot open >%s<", sfile->s_name);
         x->x_fd=-1;

@@ -397,7 +397,7 @@ static void mp3fileout_open(t_mp3fileout *x, t_symbol *filename)
         outlet_float( x->x_frames, x->x_outframes );
     }
 
-    if ( ( x->x_fd = open( filename->s_name, O_RDONLY ) ) < 0 )
+    if ( ( x->x_fd = sys_open( filename->s_name, O_RDONLY ) ) < 0 )
     {
         post( "mp3fileout~ : could not open file : %s", filename->s_name );
         perror( "open" );

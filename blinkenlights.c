@@ -758,7 +758,7 @@ static void blinkenlights_open(t_blinkenlights *x, t_symbol *sfile)
 
     //--------------------------------
 
-    if ( ( x->x_filed = fopen( sfile->s_name, "r" ) ) == NULL )
+    if ( ( x->x_filed = sys_fopen( sfile->s_name, "r" ) ) == NULL )
     {
         error( "blinkenlights : cannot open >%s<", sfile->s_name);
         return;

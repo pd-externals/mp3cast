@@ -468,7 +468,7 @@ static void pianoroll_save_file(t_pianoroll *x, t_symbol *ffile)
     FILE *tmph;
     t_int si;
 
-    if ( ( tmph = fopen( ffile->s_name, "w" ) ) == NULL )
+    if ( ( tmph = sys_fopen( ffile->s_name, "w" ) ) == NULL )
     {
         post( "pianoroll : could not open file : %s for writing", ffile->s_name );
         return;
@@ -497,7 +497,7 @@ static void pianoroll_load(t_pianoroll *x, t_symbol *ffile)
     FILE *tmph;
     t_int si;
 
-    if ( ( tmph = fopen( ffile->s_name, "r" ) ) == NULL )
+    if ( ( tmph = sys_fopen( ffile->s_name, "r" ) ) == NULL )
     {
         post( "pianoroll : could not open file : %s for reading", ffile->s_name );
         return;
