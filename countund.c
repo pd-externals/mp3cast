@@ -75,12 +75,11 @@ static void *countund_new(t_float flimit)
     return(x);
 }
 
-static void *countund_limit(t_countund* x, t_float flimit)
+static void countund_limit(t_countund* x, t_float flimit)
 {
     if ( flimit < 0 )
     {
         post( "countund~: wrong count limit" );
-        return;
     }
     else
     {
@@ -88,9 +87,8 @@ static void *countund_limit(t_countund* x, t_float flimit)
     }
 }
 
-static void *countund_bang(t_countund *x)
+static void countund_bang(t_countund *x)
 {
-
     if ( x->x_up )
     {
         x->x_value+=1;
@@ -110,7 +108,6 @@ static void *countund_bang(t_countund *x)
         }
     }
     outlet_float( x->x_obj.ob_outlet, x->x_value );
-    return;
 }
 
 void countund_setup(void)
