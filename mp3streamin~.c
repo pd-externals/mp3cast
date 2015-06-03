@@ -669,7 +669,7 @@ static void *mp3streamin_new(t_floatarg fportno, t_floatarg fdographics)
 
 void mp3streamin_tilde_setup(void)
 {
-    logpost(NULL, 4,  mp3streamin_version );
+    logpost(NULL, 4, "%s",  mp3streamin_version );
     mp3streamin_class = class_new(gensym("mp3streamin~"),
                                   (t_newmethod) mp3streamin_new, (t_method) mp3streamin_free,
                                   sizeof(t_mp3streamin),  CLASS_NOINLET, A_DEFFLOAT, A_DEFFLOAT, A_NULL);
