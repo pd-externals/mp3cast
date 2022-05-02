@@ -209,7 +209,6 @@ static void mp3cast_encode(t_mp3cast *x)
 static void mp3cast_stream(t_mp3cast *x)
 {
     int err = -1, i;            /* error return code */
-    struct frame hframe;
 
     err = send(x->x_fd, x->x_mp3outbuf, x->x_mp3size, 0);
     if(err < 0)
