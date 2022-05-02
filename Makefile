@@ -14,3 +14,13 @@ datafiles = mp3cast~-help.pd mp3cast~-meta.pd README.md LICENSE.txt
 
 PDLIBBUILDER_DIR=pd-lib-builder/
 include $(firstword $(wildcard $(PDLIBBUILDER_DIR)/Makefile.pdlibbuilder Makefile.pdlibbuilder))
+
+
+localdep_linux: install
+	scripts/localdeps.linux.sh "${installpath}/mp3cast~.pd_linux"
+
+localdep_windows: install
+	scripts/localdeps.win.sh "${installpath}/mp3cast~.dll"
+
+localdep_macos: install
+	scripts/localdeps.macos.sh "${installpath}/mp3cast~.pd_darwin"
