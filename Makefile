@@ -4,6 +4,8 @@ lib.name = mp3cast~
 
 class.sources = mp3cast~.c
 
+ldlibs = -lmpg123 -lmp3lame
+
 datafiles = mp3cast~-help.pd mp3cast~-meta.pd README.md LICENSE.txt
 
 # This Makefile is based on the Makefile from pd-lib-builder written by
