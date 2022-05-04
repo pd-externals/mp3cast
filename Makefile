@@ -17,10 +17,10 @@ include $(firstword $(wildcard $(PDLIBBUILDER_DIR)/Makefile.pdlibbuilder Makefil
 
 
 localdep_linux: install
-	scripts/localdeps.linux.sh "${installpath}/mp3cast~.pd_linux"
+	scripts/localdeps.linux.sh "${installpath}/mp3cast~.${extension}"
 
 localdep_windows: install
-	scripts/localdeps.win.sh "${installpath}/mp3cast~.dll"
+	scripts/localdeps.win.sh "${installpath}/mp3cast~.${extension}"
 
 localdep_macos: install
-	scripts/localdeps.macos.sh "${installpath}/mp3cast~.pd_darwin"
+	scripts/localdeps.macos.sh "${installpath}/mp3cast~.${extension}"
