@@ -7,7 +7,7 @@ class.sources = mp3cast~.c
 ldlibs = -lmpg123 -lmp3lame
 
 define forWindows
-  ldlibs = -lwsock32 -lpthread -lmpg123 -lmp3lame
+  ldlibs = -lwsock32 -lmpg123 -lmp3lame
 endef
 
 datafiles = mp3cast~-help.pd mp3cast~-meta.pd README.md LICENSE.txt
