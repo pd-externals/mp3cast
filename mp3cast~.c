@@ -354,7 +354,7 @@ static void mp3cast_tilde_lame_init(t_mp3cast *x)
 #ifdef _WIN32
     /* load lame_enc.dll library */
     HINSTANCE dll;
-    dll=LoadLibrary("lame_enc.dll");
+    dll=LoadLibrary("libmp3lame-0.dll");
     if(!dll)
     {
         pd_error(x, "mp3cast~: error loading lame_enc.dll");
