@@ -8,7 +8,6 @@
 #default exclude/include paths
 exclude_paths="/usr/lib/*:/System/Library/Frameworks/*"
 include_paths="/*"
-recursion=false
 
 # UTILITIES
 if [ -e "${0%/*}/localdeps.utilities.source" ]; then
@@ -194,19 +193,6 @@ fi
 #@END_UTILITIES@
 fi
 
-# detect arch
-arch=$(uname -m)
-case $arch in
-    x86_64)
-        arch=amd64
-        ;;
-    i686)
-        arch=i386
-        ;;
-    armv7l)
-        arch=arm
-esac
-
 basename () {
     local x=${1##*/}
     if [ "x$x" = "x" ]; then
@@ -253,17 +239,17 @@ install_deps () {
     if [ ! -d "${outdir}" ]; then
         outdir=.
     fi
-    if ! $recursion; then
-        outdir="${outdir}/${arch}"
+    if $subdir; then
+        outdir="${outdir}/$(print_arch)"
         mkdir -p "${outdir}"
     fi
     list_deps "$1" | while read dep; do
         infile=$(basename "$1")
         depfile=$(basename "${dep}")
-        if $recursion; then
-            loaderpath="@loader_path/${depfile}"
+        if $subdir; then
+            loaderpath="@loader_path/$(print_arch)/${depfile}"
         else
-            loaderpath="@loader_path/${arch}/${depfile}"
+            loaderpath="@loader_path/${depfile}"
         fi
         # make sure the binary looks for the dependency in the local path
         install_name_tool -change "${dep}" "${loaderpath}" "$1"
@@ -278,7 +264,7 @@ install_deps () {
             # make sure the dependency announces itself with the local path
             install_name_tool -id "${loaderpath}" "${outdir}/${depfile}"
             # recursively call ourselves, to resolve higher-order dependencies
-            INSTALLDEPS_INDENT="${INSTALLDEPS_INDENT}    " $0 -r "${outdir}/${depfile}"
+            INSTALLDEPS_INDENT="${INSTALLDEPS_INDENT}    " $0 "${outdir}/${depfile}"
         fi
     done
 }
@@ -301,9 +287,13 @@ done
 # that we codesign them again _after_ the localdeps process
 
 # This needs to be the absolutely last step. We don't do it while we're still inside a recursion.
-if ! $recursion; then
+if $sign; then
     echo -n "Code signing in progress... "
-    outdir="$(dirname "$1")/${arch}"
+    if $subdir; then
+        outdir="$(dirname "$1")/$(print_arch)"
+    else
+        outdir="$(dirname "$1")"
+    fi
     codesign --remove-signature "${ARGS[@]}" ${outdir}/*.dylib
     codesign -s -  "${ARGS[@]}" ${outdir}/*.dylib
     echo "Done"
