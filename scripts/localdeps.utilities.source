@@ -105,6 +105,9 @@ usage: $0 [-I <includepath>] [-X <excludepath>] <binary> [<binary2> ...]
 
   -I <includepath>: adds one include path entry
   -X <excludepath>: adds one exclude path entry
+  -d: put localdeps to subdirectory named \$arch (Linux and macOS)
+  -s: codesign resulting binaries (macOS only)
+  -r: mark that we're called recursively (used internally only)
   -v: raise verbosity
   -q: lower verbosity
 
@@ -147,8 +150,10 @@ EOF
     exit 1
 }
 
-
-while getopts "hqvI:X:" arg; do
+recurse=false
+sign=false
+subdir=false
+while getopts "hqrsvI:X:" arg; do
     case $arg in
 	h)
 	    usage
@@ -167,8 +172,17 @@ while getopts "hqvI:X:" arg; do
 	    fi
             include_paths=$(echo :${include_paths}: | substitute ":${p}:" ":" | sed -e 's|^:*||' -e 's|:*$||' -e 's|::*|:|g')
 	    ;;
+        d)
+            subdir=true
+            ;;
         q)
             verbose=$((verbose-1))
+            ;;
+        r)
+            recurse=true
+            ;;
+        s)
+            sign=true
             ;;
         v)
             verbose=$((verbose+1))
