@@ -23,8 +23,8 @@ include $(firstword $(wildcard $(PDLIBBUILDER_DIR)/Makefile.pdlibbuilder Makefil
 localdep_linux: install
 	scripts/localdeps.linux.sh -d "${installpath}/mp3cast~.${extension}"
 
+localdep_macos: install
+	scripts/localdeps.macos.sh -d -s "${installpath}/mp3cast~.${extension}"
+
 localdep_windows: install
 	scripts/localdeps.win.sh "${installpath}/mp3cast~.${extension}"
-
-localdep_macos: install
-	scripts/localdeps.macos.sh "${installpath}/mp3cast~.${extension}"
