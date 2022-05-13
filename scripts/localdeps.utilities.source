@@ -1,7 +1,25 @@
 verbose=${verbose:-0}
 
 error() {
-   echo "$@" 1>&2
+    echo "$@" 1>&2
+}
+
+print_arch() {
+    # conflation of arch names follows rules
+    # from deken-plugin.tcl
+    arch=$(uname -m)
+    case $arch in
+        x86_64)
+            arch=amd64
+            ;;
+        i486 | i586 | i686)
+            arch=i386
+            ;;
+        armv6 | arm6l | arm7 | arm7l)
+            arch=arm
+            ;;
+    esac
+    echo $arch
 }
 
 substitute() {
