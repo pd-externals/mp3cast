@@ -1,3 +1,5 @@
+sign=false
+subdir=false
 verbose=${verbose:-0}
 
 error() {
@@ -105,9 +107,8 @@ usage: $0 [-I <includepath>] [-X <excludepath>] <binary> [<binary2> ...]
 
   -I <includepath>: adds one include path entry
   -X <excludepath>: adds one exclude path entry
-  -d: put localdeps to subdirectory named \$arch (Linux and macOS)
+  -d: put localdeps into subdirectory named \$arch (Linux and macOS)
   -s: codesign resulting binaries (macOS only)
-  -r: mark that we're called recursively (used internally only)
   -v: raise verbosity
   -q: lower verbosity
 
@@ -150,10 +151,7 @@ EOF
     exit 1
 }
 
-recurse=false
-sign=false
-subdir=false
-while getopts "dhqrsvI:X:" arg; do
+while getopts "dhqsvI:X:" arg; do
     case $arg in
 	h)
 	    usage
@@ -177,9 +175,6 @@ while getopts "dhqrsvI:X:" arg; do
             ;;
         q)
             verbose=$((verbose-1))
-            ;;
-        r)
-            recurse=true
             ;;
         s)
             sign=true
