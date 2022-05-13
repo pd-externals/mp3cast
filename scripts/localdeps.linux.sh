@@ -199,19 +199,6 @@ fi
 #@END_UTILITIES@
 fi
 
-# detect arch
-arch=$(uname -m)
-case $arch in
-    x86_64)
-        arch=amd64
-        ;;
-    i686)
-        arch=i386
-        ;;
-    armv7l)
-        arch=arm
-esac
-
 list_deps() {
     local libpath
     local inc
@@ -219,19 +206,22 @@ list_deps() {
         | grep ' => ' \
         | while read _ _ libpath _; do
         inc=$(check_includedep "${libpath}")
-	if [ "x${inc}" != "x" ]; then
-	    echo "${inc}"
-	fi
+        if [ "x${inc}" != "x" ]; then
+            echo "${inc}"
+        fi
     done
 }
-
 install_deps () {
     # make a local copy of all linked libraries of given binary
     # and set RUNPATH to $ORIGIN (exclude "standard" libraries)
     # arg1: binary to check
     local outdir
-    outdir="$(dirname "$1")/${arch}"
     local outfile
+    if $subdir; then
+        outdir="$(dirname "$1")/$(print_arch)"
+    else
+        outdir="$(dirname "$1")"
+    fi
     if [ ! -d "${outdir}" ]; then
         outdir=.
     fi
@@ -250,7 +240,11 @@ install_deps () {
             patchelf --set-rpath \$ORIGIN "${outfile}"
         fi
     done
-    patchelf --set-rpath \$ORIGIN/${arch} "${1}"
+    if $subdir; then
+        patchelf --set-rpath "\$ORIGIN/$(print_arch)" "${1}"
+    else
+        patchelf --set-rpath \$ORIGIN "${1}"
+    fi
 }
 
 
@@ -264,7 +258,8 @@ for f in "$@"; do
         error "Skipping '${f}'. Is it a binary file?"
         continue
     fi
-    depdir="$(dirname ${f})/${arch}"
-    mkdir -p "${depdir}"
+    if $subdir; then
+        mkdir -p "$(dirname ${f})/$(print_arch)"
+    fi
     install_deps "${f}"
 done
