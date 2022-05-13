@@ -28,10 +28,30 @@ else
     # was copied from 'localdeps.utilities.source'.
     # changes you make to this section will be lost.
 #@BEGIN_UTILITIES@
+sign=false
+subdir=false
 verbose=${verbose:-0}
 
 error() {
-   echo "$@" 1>&2
+    echo "$@" 1>&2
+}
+
+print_arch() {
+    # conflation of arch names follows rules
+    # from deken-plugin.tcl
+    arch=$(uname -m)
+    case $arch in
+        x86_64)
+            arch=amd64
+            ;;
+        i486 | i586 | i686)
+            arch=i386
+            ;;
+        armv6 | arm6l | arm7 | arm7l)
+            arch=arm
+            ;;
+    esac
+    echo $arch
 }
 
 substitute() {
@@ -117,6 +137,8 @@ usage: $0 [-I <includepath>] [-X <excludepath>] <binary> [<binary2> ...]
 
   -I <includepath>: adds one include path entry
   -X <excludepath>: adds one exclude path entry
+  -d: put localdeps into subdirectory named \$arch (Linux and macOS)
+  -s: codesign resulting binaries (macOS only)
   -v: raise verbosity
   -q: lower verbosity
 
@@ -159,8 +181,7 @@ EOF
     exit 1
 }
 
-
-while getopts "hqvI:X:" arg; do
+while getopts "dhqsvI:X:" arg; do
     case $arg in
 	h)
 	    usage
@@ -179,8 +200,14 @@ while getopts "hqvI:X:" arg; do
 	    fi
             include_paths=$(echo :${include_paths}: | substitute ":${p}:" ":" | sed -e 's|^:*||' -e 's|:*$||' -e 's|::*|:|g')
 	    ;;
+        d)
+            subdir=true
+            ;;
         q)
             verbose=$((verbose-1))
+            ;;
+        s)
+            sign=true
             ;;
         v)
             verbose=$((verbose+1))
