@@ -435,6 +435,25 @@ char *mp3cast_base64_encode(char *data)
     return result;
 }
 
+// borrowed from iemnet_sender.c
+static int mp3cast_sock_set_nonblocking(int socket, int nonblocking)
+{
+#ifdef _WIN32
+    u_long modearg = nonblocking;
+    if (ioctlsocket(socket, FIONBIO, &modearg) != NO_ERROR)
+        return -1;
+#else
+    int sockflags = fcntl(socket, F_GETFL, 0);
+    if (nonblocking)
+        sockflags |= O_NONBLOCK;
+    else
+        sockflags &= ~O_NONBLOCK;
+    if (fcntl(socket, F_SETFL, sockflags) < 0)
+        return -1;
+#endif
+    return 0;
+}
+
 /* connect to server */
 static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno)
 {
@@ -457,7 +476,7 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     const char      * buf = 0;
     char            resp[STRBUF_SIZE];
     unsigned int    len;
-    fd_set          fdset;
+    fd_set          writefds, errfds;
     struct timeval  tv;
     int    sockfd;
     int    ret;
@@ -491,9 +510,13 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     /* assign client port number */
     server.sin_port = htons((unsigned short)portno);
 
+    // Set sockfd non-blocking, so we can use select()'s timeout
+    mp3cast_sock_set_nonblocking(sockfd, 1);
+
     /* try to connect.  */
     post("mp3cast~: connecting to port %d", portno);
-    if (connect(sockfd, (struct sockaddr *) &server, sizeof (server)) < 0)
+    ret = connect(sockfd, (struct sockaddr *) &server, sizeof (server));
+    if (errno != EINPROGRESS)
     {
         pd_error(x, "mp3cast~: connection failed!\n");
 #ifdef _WIN32
@@ -505,15 +528,20 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     }
 
     /* sheck if we can read/write from/to the socket */
-    FD_ZERO( &fdset);
-    FD_SET( sockfd, &fdset);
-    tv.tv_sec  = 0;            /* seconds */
-    tv.tv_usec = 500;        /* microseconds */
+    FD_ZERO(&writefds);
+    FD_SET(sockfd, &writefds); // socket is connected when writable
+    FD_ZERO(&errfds);
+    FD_SET(sockfd, &errfds);
+    tv.tv_sec  = 2;            /* seconds */
+    tv.tv_usec = 0;        /* microseconds */
 
-    ret = select(sockfd + 1, &fdset, NULL, NULL, &tv);
-    if(ret < 0)
+    ret = select(sockfd + 1, NULL, &writefds, &errfds, &tv);
+    if(ret <= 0)
     {
-        pd_error(x, "mp3cast~: can not read from socket");
+        if(ret == 0)
+            pd_error(x, "mp3cast~: write timeout on socket");
+        if(ret < 0)
+            pd_error(x, "mp3cast~: can not write to socket");
 #ifdef _WIN32
         closesocket(sockfd);
 #else
@@ -521,15 +549,8 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
 #endif /* _WIN32 */
         return;
     }
-#ifndef _WIN32
-    ret = select(sockfd + 1, NULL, &fdset, NULL, &tv);
-    if(ret < 0)
-    {
-        pd_error(x, "mp3cast~: can not write to socket");
-        close(sockfd);
-        return;
-    }
-#endif /* not _WIN32 */
+
+    mp3cast_sock_set_nonblocking(sockfd, 0);
 
     if(x->x_icecast == 0) /* SHOUTCAST */
     {
