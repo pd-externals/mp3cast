@@ -120,6 +120,7 @@ typedef struct _mp3cast
     char* x_url;
     char* x_genre;
     char* x_description;
+    char* x_icytitle;
     int x_isPublic;
 
     t_float x_f;              /* float needed for signal input */
@@ -941,6 +942,13 @@ static void mp3cast_description(t_mp3cast *x, t_symbol *description)
     post("mp3cast~: description set to %s", x->x_description);
 }
 
+/* set icy-title for IceCast server */
+static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
+{
+    x->x_icytitle = icytitle->s_name;
+    post("mp3cast~: icy-title set to %s", x->x_icytitle);
+}
+
 /* set connection timeout */
 static void mp3cast_timeout(t_mp3cast *x, t_float timeout)
 {
@@ -997,6 +1005,7 @@ static void *mp3cast_new(void)
     x->x_isPublic = 1;
     x->x_description = "playing with my patches";
     x->x_timeout = 5000;
+    x->x_icytitle = "Pure Data Live Stream";
     return(x);
 }
 
@@ -1022,5 +1031,6 @@ void mp3cast_tilde_setup(void)
     class_addmethod(mp3cast_class, (t_method)mp3cast_isPublic, gensym("isPublic"), A_FLOAT, 0);
     class_addmethod(mp3cast_class, (t_method)mp3cast_description, gensym("description"), A_SYMBOL, 0);
     class_addmethod(mp3cast_class, (t_method)mp3cast_timeout, gensym("timeout"), A_FLOAT, 0);
+    class_addmethod(mp3cast_class, (t_method)mp3cast_icytitle, gensym("icy-title"), A_SYMBOL, 0);
 }
 
