@@ -123,6 +123,7 @@ typedef struct _mp3cast
     int x_isPublic;
 
     t_float x_f;              /* float needed for signal input */
+    t_float x_timeout;        /* connection timeout */
 
     lame_global_flags *lgfp;  /* lame encoder configuration */
 
@@ -532,8 +533,8 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     FD_SET(sockfd, &writefds); // socket is connected when writable
     FD_ZERO(&errfds);
     FD_SET(sockfd, &errfds);
-    tv.tv_sec  = 2;            /* seconds */
-    tv.tv_usec = 0;        /* microseconds */
+    tv.tv_sec  = (int)(x->x_timeout / 1000);     /* seconds */
+    tv.tv_usec = ((x->x_timeout/1000) - tv.tv_sec) * 1000000;  /* microseconds */
 
     ret = select(sockfd + 1, NULL, &writefds, &errfds, &tv);
     if(ret <= 0)
@@ -940,6 +941,14 @@ static void mp3cast_description(t_mp3cast *x, t_symbol *description)
     post("mp3cast~: description set to %s", x->x_description);
 }
 
+/* set connection timeout */
+static void mp3cast_timeout(t_mp3cast *x, t_float timeout)
+{
+    if (timeout < 1) timeout = 1;
+    x->x_timeout = timeout;
+    post("mp3cast~: timeout set to %d", (int)x->x_timeout);
+}
+
 /* clean up */
 static void mp3cast_free(t_mp3cast *x)
 {
@@ -987,6 +996,7 @@ static void *mp3cast_new(void)
     x->x_genre = "experimental sound";
     x->x_isPublic = 1;
     x->x_description = "playing with my patches";
+    x->x_timeout = 5000;
     return(x);
 }
 
@@ -1011,5 +1021,6 @@ void mp3cast_tilde_setup(void)
     class_addmethod(mp3cast_class, (t_method)mp3cast_genre, gensym("genre"), A_SYMBOL, 0);
     class_addmethod(mp3cast_class, (t_method)mp3cast_isPublic, gensym("isPublic"), A_FLOAT, 0);
     class_addmethod(mp3cast_class, (t_method)mp3cast_description, gensym("description"), A_SYMBOL, 0);
+    class_addmethod(mp3cast_class, (t_method)mp3cast_timeout, gensym("timeout"), A_FLOAT, 0);
 }
 
