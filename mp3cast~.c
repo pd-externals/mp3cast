@@ -982,9 +982,7 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
     // limit icytitle to 318 characters
     char icytitle_arr[319] = {};
     char *icytitle = icytitle_arr;
-    unsigned int len = strlen(icytitle_s->s_name);
-    if (len > 318) len = 318;
-    strncpy(icytitle, icytitle_s->s_name, len);
+    strncpy(icytitle, icytitle_s->s_name, 318);
 
     struct          sockaddr_in server;
     struct          hostent *hp;
