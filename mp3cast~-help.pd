@@ -1,6 +1,6 @@
 #N canvas 48 54 687 606 10;
 #X floatatom 53 24 0 40 16000 0 - - - 0;
-#X msg 351 567 \; pd dsp 1;
+#X msg 457 567 \; pd dsp 1;
 #X floatatom 48 557 0 0 0 0 - - - 0;
 #X msg 181 88 disconnect;
 #X text 266 63 <-- your password for the server;
@@ -16,13 +16,13 @@
 #X text 409 284 2 = dual channel;
 #X text 409 297 3 = mono;
 #X msg 6 439 print;
-#X msg 417 567 \; pd dsp 0;
+#X msg 523 567 \; pd dsp 0;
 #X msg 204 129 icecast;
 #X obj 53 51 osc~ 440;
 #X msg 211 242 mpeg 8000 8 3 5;
 #X msg 212 218 mpeg 44100 128 1 4;
-#X obj 350 538 loadbang;
-#X text 313 497 Author : Yves Degoyon ( ydegoyon@free.fr );
+#X obj 456 538 loadbang;
+#X text 418 474 Author : Yves Degoyon ( ydegoyon@free.fr );
 #X msg 191 109 shoutcast;
 #X msg 212 194 name mystream;
 #X text 322 195 name of the stream;
@@ -40,11 +40,13 @@
 #X msg 179 363 url http://localhost;
 #X msg 180 435 description hardcore;
 #X msg 180 459 genre other;
-#X text 313 510 Contributor : Ramiro Consentino;
+#X text 418 487 Contributor : Ramiro Consentino;
 #X obj 48 519 mp3cast~;
 #X msg 181 338 timeout 2000;
 #X text 303 336 connection timeout (default: 5000ms);
 #X text 260 335 msec;
+#X msg 127 491 icy-title Pure\ Data\ playing\ a\ sine\ tone;
+#X text 138 511 update song info in stream;
 #X connect 0 0 19 0;
 #X connect 3 0 42 0;
 #X connect 16 0 42 0;
@@ -67,3 +69,4 @@
 #X connect 40 0 42 0;
 #X connect 42 0 2 0;
 #X connect 43 0 42 0;
+#X connect 46 0 42 0;
