@@ -975,6 +975,12 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
         return;
     }
 
+    // works only with Icecast 2
+    if (x->x_icecast != 2) {
+        pd_error(x, "mp3cast~: 'icy-title' works only with Icecast 2");
+        return;
+    }
+
     // limit icytitle to 318 characters
     char icytitle_arr[319] = {};
     unsigned char *icytitle = icytitle_arr;
