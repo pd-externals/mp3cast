@@ -124,7 +124,11 @@ typedef struct _mp3cast
     int x_isPublic;
 
     t_float x_f;              /* float needed for signal input */
+
+    /* connection stuff */
     t_float x_timeout;        /* connection timeout */
+    char* x_hostname;
+    int x_port;
 
     lame_global_flags *lgfp;  /* lame encoder configuration */
 
@@ -766,6 +770,8 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     //     post("mp3cast~: server answered : %s", resp);
     // }
 
+    x->x_hostname = hostname->s_name;
+    x->x_port = (int)fportno;
     x->x_fd = sockfd;
     outlet_float(x->x_obj.ob_outlet, 1);
     post("mp3cast~: logged in to %s", hp->h_name);
@@ -945,7 +951,126 @@ static void mp3cast_description(t_mp3cast *x, t_symbol *description)
 /* set icy-title for IceCast server */
 static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
 {
-    x->x_icytitle = icytitle->s_name;
+    /* Check if we're already streaming */
+    //if (!x->x_fd) {
+    //    pd_error(x, "mp3cast~: not connected yet, can't update icy-title")
+    //    return;
+    //}
+    struct          sockaddr_in server;
+    struct          hostent *hp;
+    int             portno = x->x_port;    /* get port from message box */
+
+    /* variables used for communication with server */
+    const char      * buf = 0;
+    char            resp[STRBUF_SIZE];
+    unsigned int    len;
+    fd_set          writefds, errfds;
+    struct timeval  tv;
+    int    sockfd;
+    int    ret;
+
+    // Setting up a second connection for HTTP GET request
+    // This is a work-around for MP3/AAC streams since those formats
+    // do not support streamable metadata.
+    sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sockfd < 0)
+    {
+        pd_error(x, "mp3cast~: internal error while attempting to open socket");
+        return;
+    }
+
+    server.sin_family = AF_INET;
+    hp = gethostbyname(x->x_hostname);
+    if (hp == 0)
+    {
+        post("mp3cast~: bad host?");
+        close(sockfd);
+        return;
+    }
+    memcpy((char *)&server.sin_addr, (char *)hp->h_addr, hp->h_length);
+
+    /* assign client port number */
+    server.sin_port = htons((unsigned short)portno);
+
+    // Set sockfd non-blocking, so we can use select()'s timeout
+    mp3cast_sock_set_nonblocking(sockfd, 1);
+
+    /* try to connect.  */
+    post("mp3cast~: connecting to port %d", portno);
+    ret = connect(sockfd, (struct sockaddr *) &server, sizeof (server));
+    if (errno != EINPROGRESS)
+    {
+        pd_error(x, "mp3cast~: connection failed!\n");
+#ifdef _WIN32
+        closesocket(sockfd);
+#else
+        close(sockfd);
+#endif /* _WIN32 */
+        return;
+    }
+
+    FD_ZERO(&writefds);
+    FD_SET(sockfd, &writefds); // socket is connected when writable
+    FD_ZERO(&errfds);
+    FD_SET(sockfd, &errfds);
+    tv.tv_sec  = (int)(x->x_timeout / 1000);     /* seconds */
+    tv.tv_usec = ((x->x_timeout/1000) - tv.tv_sec) * 1000000;  /* microseconds */
+
+    ret = select(sockfd + 1, NULL, &writefds, &errfds, &tv);
+    if(ret <= 0)
+    {
+        if(ret == 0)
+            pd_error(x, "mp3cast~: write timeout on socket");
+        if(ret < 0)
+            pd_error(x, "mp3cast~: can not write to socket");
+#ifdef _WIN32
+        closesocket(sockfd);
+#else
+        close(sockfd);
+#endif /* _WIN32 */
+        return;
+    }
+
+    mp3cast_sock_set_nonblocking(sockfd, 0);
+    // Done setting up connection
+
+    // Send data
+    buf = "GET /admin/metadata.xsl?mode=updinfo&song=sdfsd&mount=%2flive.mp3 HTTP/1.1\n";
+    send(sockfd, buf, strlen(buf), 0);
+    buf = "Host: netpd.org:8010\n";
+    send(sockfd, buf, strlen(buf), 0);
+    buf = "Authorization: Basic c291cmNlOmRlbGV1emU=\n";
+    send(sockfd, buf, strlen(buf), 0);
+    buf = "User-Agent: mp3cast~/0.5\n\n";
+    send(sockfd, buf, strlen(buf), 0);
+//    buf = x->x_mountpoint;
+//    send(sockfd, buf, strlen(buf), 0);
+//    buf = " HTTP/1.0\r\n";
+//    send(sockfd, buf, strlen(buf), 0);
+//    /* send basic authorization as base64 encoded string */
+//    sprintf(resp, "source:%s", x->x_passwd);
+//    len = strlen(resp);
+//    base64 = mp3cast_base64_encode(resp);
+//    sprintf(resp, "Authorization: Basic %s\r\n", base64);
+//    send(sockfd, resp, strlen(resp), 0);
+//    t_freebytes(base64, len*4/3 + 4);
+//    /* send application name */
+//    buf = "User-Agent: mp3cast~";
+//    send(sockfd, buf, strlen(buf), 0);
+//    /* send content type: mpeg */
+//    buf = "\r\nContent-Type: audio/mpeg";
+//    send(sockfd, buf, strlen(buf), 0);
+
+    // closing socket
+    if(sockfd >= 0)            /* close socket */
+    {
+#ifdef _WIN32
+        closesocket(sockfd);
+#else
+        close(sockfd);
+#endif /* _WIN32 */
+    }
+
     post("mp3cast~: icy-title set to %s", x->x_icytitle);
 }
 
