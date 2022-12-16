@@ -118,7 +118,7 @@ typedef struct _mp3cast
     unsigned short x_inp;     /* in position for buffer */
     unsigned short x_outp;    /* out position for buffer*/
     short *x_mp3inbuf;        /* data to be sent to LAME */
-    char *x_mp3outbuf;        /* data returned by LAME -> our mp3 stream */
+    unsigned char *x_mp3outbuf; /* data returned by LAME -> our mp3 stream */
     short *x_buffer;          /* data to be buffered */
     int x_bytesbuffered;      /* number of unprocessed bytes in buffer */
     int x_start;
@@ -157,7 +157,6 @@ typedef struct _mp3cast
 static void mp3cast_encode(t_mp3cast *x)
 {
     unsigned short i, wp;
-    int err = -1;
     int n = x->x_lamechunk;
 
 #ifdef _WIN32
@@ -232,7 +231,7 @@ static void mp3cast_encode(t_mp3cast *x)
 /* stream mp3 to SHOUTcast server */
 static void mp3cast_stream(t_mp3cast *x)
 {
-    int err = -1, i;            /* error return code */
+    int err = -1;            /* error return code */
 
     err = send(x->x_fd, x->x_mp3outbuf, x->x_mp3size, 0);
     if(err < 0)
@@ -391,7 +390,7 @@ static void mp3cast_tilde_lame_init(t_mp3cast *x)
 #endif  /* _WIN32 */
     {
         const char *lameVersion = get_lame_version();
-        logpost(NULL, 4, "%s",  "mp3cast~ : using lame version : %s", lameVersion );
+        logpost(x, 4, "mp3cast~ : using lame version : %s", lameVersion );
     }
 
 
@@ -788,7 +787,7 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     //     post("mp3cast~: server answered : %s", resp);
     // }
 
-    x->x_hostname = hostname->s_name;
+    x->x_hostname = (char *)hostname->s_name;
     x->x_port = (int)fportno;
     x->x_fd = sockfd;
     outlet_float(x->x_obj.ob_outlet, 1);
@@ -801,11 +800,10 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
 /* close connection to SHOUTcast server */
 static void mp3cast_disconnect(t_mp3cast *x)
 {
-    int err = -1;
     if(x->x_lame >= 0)
     {
         /* ignore remaining bytes */
-        if ( x->x_mp3size = lame_encode_flush( x->lgfp, x->x_mp3outbuf, 0) < 0 )
+        if ((x->x_mp3size = lame_encode_flush( x->lgfp, x->x_mp3outbuf, 0)) < 0 )
         {
             post( "mp3cast~ : warning : remaining encoded bytes" );
         }
@@ -832,7 +830,7 @@ static void mp3cast_disconnect(t_mp3cast *x)
 static void mp3cast_password(t_mp3cast *x, t_symbol *password)
 {
     post("mp3cast~ : setting password to %s", password->s_name );
-    x->x_passwd = password->s_name;
+    x->x_passwd = (char *)password->s_name;
 }
 
 /* settings for mp3 encoding */
@@ -918,28 +916,28 @@ static void mp3cast_shoutcast(t_mp3cast *x)
 /* set mountpoint for IceCast server */
 static void mp3cast_mountpoint(t_mp3cast *x, t_symbol *mount)
 {
-    x->x_mountpoint = mount->s_name;
+    x->x_mountpoint = (char *)mount->s_name;
     post("mp3cast~: mountpoint set to %s", x->x_mountpoint);
 }
 
 /* set namle for IceCast server */
 static void mp3cast_name(t_mp3cast *x, t_symbol *name)
 {
-    x->x_name = name->s_name;
+    x->x_name = (char *)name->s_name;
     post("mp3cast~: name set to %s", x->x_name);
 }
 
 /* set url for IceCast server */
 static void mp3cast_url(t_mp3cast *x, t_symbol *url)
 {
-    x->x_url = url->s_name;
+    x->x_url = (char *)url->s_name;
     post("mp3cast~: url set to %s", x->x_url);
 }
 
 /* set genre for IceCast server */
 static void mp3cast_genre(t_mp3cast *x, t_symbol *genre)
 {
-    x->x_genre = genre->s_name;
+    x->x_genre = (char *)genre->s_name;
     post("mp3cast~: genre set to %s", x->x_genre);
 }
 
@@ -962,7 +960,7 @@ static void mp3cast_isPublic(t_mp3cast *x, t_floatarg isPublic)
 /* set description for IceCast server */
 static void mp3cast_description(t_mp3cast *x, t_symbol *description)
 {
-    x->x_description = description->s_name;
+    x->x_description = (char *)description->s_name;
     post("mp3cast~: description set to %s", x->x_description);
 }
 
@@ -983,10 +981,10 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
 
     // limit icytitle to 318 characters
     char icytitle_arr[319] = {};
-    unsigned char *icytitle = icytitle_arr;
-    unsigned int ilen = strlen(icytitle_s->s_name);
-    if (ilen > 318) ilen = 318;
-    strncpy(icytitle, icytitle_s->s_name, ilen);
+    char *icytitle = icytitle_arr;
+    unsigned int len = strlen(icytitle_s->s_name);
+    if (len > 318) len = 318;
+    strncpy(icytitle, icytitle_s->s_name, len);
 
     struct          sockaddr_in server;
     struct          hostent *hp;
@@ -997,7 +995,6 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
     char            *buf = buffer;
     char            song_title_encoded[STRBUF_SIZE] = {};
     char            *ste = song_title_encoded;
-    unsigned int    len;
     fd_set          writefds, errfds;
     struct timeval  tv;
     int    sockfd = -1;
@@ -1069,7 +1066,7 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
 
     // Send data
     // urlencode song title
-    urlencode(icytitle, ste);
+    urlencode((unsigned char*)icytitle, ste);
     // GET /
     sprintf(buf, "GET /admin/metadata.xsl?mode=updinfo&song=%s&mount=%%2f%s HTTP/1.1\n",
             ste, x->x_mountpoint);
