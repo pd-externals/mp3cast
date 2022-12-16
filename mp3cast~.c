@@ -120,7 +120,6 @@ typedef struct _mp3cast
     char* x_url;
     char* x_genre;
     char* x_description;
-    char* x_icytitle;
     int x_isPublic;
 
     t_float x_f;              /* float needed for signal input */
@@ -953,16 +952,17 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
 {
     /* Check if we're already streaming */
     //if (!x->x_fd) {
-    //    pd_error(x, "mp3cast~: not connected yet, can't update icy-title")
+    //    pd_error(x, "mp3cast~: not connected yet, can't update icy-title");
     //    return;
     //}
+
     struct          sockaddr_in server;
     struct          hostent *hp;
     int             portno = x->x_port;    /* get port from message box */
 
     /* variables used for communication with server */
-    const char      * buf = 0;
-    char            resp[STRBUF_SIZE];
+    char            buffer[STRBUF_SIZE];
+    char            *buf = buffer;
     unsigned int    len;
     fd_set          writefds, errfds;
     struct timeval  tv;
@@ -1035,31 +1035,26 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
     // Done setting up connection
 
     // Send data
-    buf = "GET /admin/metadata.xsl?mode=updinfo&song=sdfsd&mount=%2flive.mp3 HTTP/1.1\n";
+    // GET /
+    sprintf(buf, "GET /admin/metadata.xsl?mode=updinfo&song=%s&mount=%%2f%s HTTP/1.1\n",
+            icytitle->s_name, x->x_mountpoint);
     send(sockfd, buf, strlen(buf), 0);
-    buf = "Host: netpd.org:8010\n";
+    // Host:
+    sprintf(buf, "Host: %s:%d\n",
+            x->x_hostname, x->x_port);
     send(sockfd, buf, strlen(buf), 0);
-    buf = "Authorization: Basic c291cmNlOmRlbGV1emU=\n";
+    // Authorization:
+    char *base64;
+    sprintf(buf, "source:%s", x->x_passwd);
+    base64 = mp3cast_base64_encode(buf);
+    sprintf(buf, "Authorization: Basic %s\n", base64);
     send(sockfd, buf, strlen(buf), 0);
-    buf = "User-Agent: mp3cast~/0.5\n\n";
+    // User-Agent:
+    buf = "User-Agent: mp3cast~/0.6\n";
     send(sockfd, buf, strlen(buf), 0);
-//    buf = x->x_mountpoint;
-//    send(sockfd, buf, strlen(buf), 0);
-//    buf = " HTTP/1.0\r\n";
-//    send(sockfd, buf, strlen(buf), 0);
-//    /* send basic authorization as base64 encoded string */
-//    sprintf(resp, "source:%s", x->x_passwd);
-//    len = strlen(resp);
-//    base64 = mp3cast_base64_encode(resp);
-//    sprintf(resp, "Authorization: Basic %s\r\n", base64);
-//    send(sockfd, resp, strlen(resp), 0);
-//    t_freebytes(base64, len*4/3 + 4);
-//    /* send application name */
-//    buf = "User-Agent: mp3cast~";
-//    send(sockfd, buf, strlen(buf), 0);
-//    /* send content type: mpeg */
-//    buf = "\r\nContent-Type: audio/mpeg";
-//    send(sockfd, buf, strlen(buf), 0);
+    // EOR
+    buf = "\n";
+    send(sockfd, buf, strlen(buf), 0);
 
     // closing socket
     if(sockfd >= 0)            /* close socket */
@@ -1071,7 +1066,7 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
 #endif /* _WIN32 */
     }
 
-    post("mp3cast~: icy-title set to %s", x->x_icytitle);
+    post("mp3cast~: icy-title set to %s", icytitle->s_name);
 }
 
 /* set connection timeout */
@@ -1130,7 +1125,6 @@ static void *mp3cast_new(void)
     x->x_isPublic = 1;
     x->x_description = "playing with my patches";
     x->x_timeout = 5000;
-    x->x_icytitle = "Pure Data Live Stream";
     return(x);
 }
 
