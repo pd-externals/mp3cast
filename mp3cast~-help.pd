@@ -46,7 +46,7 @@
 #X text 303 336 connection timeout (default: 5000ms);
 #X text 260 335 msec;
 #X msg 127 491 icy-title Pure\ Data\ playing\ a\ sine\ tone;
-#X text 138 511 update song info in stream;
+#X text 134 512 update song info in stream (works only for icecast2);
 #X connect 0 0 19 0;
 #X connect 3 0 42 0;
 #X connect 16 0 42 0;
