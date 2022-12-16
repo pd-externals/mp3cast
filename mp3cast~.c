@@ -974,7 +974,6 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
         pd_error(x, "mp3cast~: not connected yet, can't update icy-title");
         return;
     }
-    post("value of x_fd: %d", x->x_fd);
 
     // limit icytitle to 318 characters
     char icytitle_arr[319] = {};
