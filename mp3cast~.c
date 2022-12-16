@@ -76,6 +76,25 @@
 
 static char   *mp3cast_version = "mp3cast~: mp3 streamer version 0.5, written by Yves Degoyon";
 
+// urlencoding stuff taken from: https://stackoverflow.com/a/21491633
+char urlenc_table[256] = {0};
+
+void urlencode_table_init(){
+    int i;
+    for (i = 0; i < 256; i++){
+        urlenc_table[i] = isalnum( i) || i == '*' || i == '-' || i == '.' || i == '_' ? i : (i == ' ') ? '+' : 0;
+    }
+}
+
+char *urlencode(unsigned char *s, char *enc){
+    for (; *s; s++){
+        if (urlenc_table[*s]) *enc = urlenc_table[*s];
+        else sprintf( enc, "%%%02X", *s);
+        while (*++enc);
+    }
+    return(enc);
+}
+
 static char base64table[65] =
 {
     'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
@@ -948,13 +967,21 @@ static void mp3cast_description(t_mp3cast *x, t_symbol *description)
 }
 
 /* set icy-title for IceCast server */
-static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
+static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
 {
     /* Check if we're already streaming */
-    //if (!x->x_fd) {
-    //    pd_error(x, "mp3cast~: not connected yet, can't update icy-title");
-    //    return;
-    //}
+    if (x->x_fd == -1) {
+        pd_error(x, "mp3cast~: not connected yet, can't update icy-title");
+        return;
+    }
+    post("value of x_fd: %d", x->x_fd);
+
+    // limit icytitle to 318 characters
+    char icytitle_arr[319] = {};
+    unsigned char *icytitle = icytitle_arr;
+    unsigned int ilen = strlen(icytitle_s->s_name);
+    if (ilen > 318) ilen = 318;
+    strncpy(icytitle, icytitle_s->s_name, ilen);
 
     struct          sockaddr_in server;
     struct          hostent *hp;
@@ -963,10 +990,12 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
     /* variables used for communication with server */
     char            buffer[STRBUF_SIZE];
     char            *buf = buffer;
+    char            song_title_encoded[STRBUF_SIZE] = {};
+    char            *ste = song_title_encoded;
     unsigned int    len;
     fd_set          writefds, errfds;
     struct timeval  tv;
-    int    sockfd;
+    int    sockfd = -1;
     int    ret;
 
     // Setting up a second connection for HTTP GET request
@@ -996,7 +1025,6 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
     mp3cast_sock_set_nonblocking(sockfd, 1);
 
     /* try to connect.  */
-    post("mp3cast~: connecting to port %d", portno);
     ret = connect(sockfd, (struct sockaddr *) &server, sizeof (server));
     if (errno != EINPROGRESS)
     {
@@ -1035,9 +1063,11 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
     // Done setting up connection
 
     // Send data
+    // urlencode song title
+    urlencode(icytitle, ste);
     // GET /
     sprintf(buf, "GET /admin/metadata.xsl?mode=updinfo&song=%s&mount=%%2f%s HTTP/1.1\n",
-            icytitle->s_name, x->x_mountpoint);
+            ste, x->x_mountpoint);
     send(sockfd, buf, strlen(buf), 0);
     // Host:
     sprintf(buf, "Host: %s:%d\n",
@@ -1066,7 +1096,7 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle)
 #endif /* _WIN32 */
     }
 
-    post("mp3cast~: icy-title set to %s", icytitle->s_name);
+    post("mp3cast~: icy-title set to %s", icytitle);
 }
 
 /* set connection timeout */
@@ -1098,6 +1128,7 @@ static void *mp3cast_new(void)
     t_mp3cast *x = (t_mp3cast *)pd_new(mp3cast_class);
     inlet_new (&x->x_obj, &x->x_obj.ob_pd, gensym ("signal"), gensym ("signal"));
     outlet_new(&x->x_obj, gensym("float"));
+    urlencode_table_init();
     x->x_fd = -1;
     x->x_lame = -1;
     x->x_passwd = "pd";
