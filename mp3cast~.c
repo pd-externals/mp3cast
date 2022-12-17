@@ -145,7 +145,8 @@ typedef struct _mp3cast
 
     /* connection stuff */
     t_float x_timeout;        /* connection timeout */
-    char* x_hostname;
+    struct sockaddr_in  x_servaddr;
+    char *x_hostname;
     int x_port;
 
     lame_global_flags *lgfp;  /* lame encoder configuration */
@@ -538,7 +539,7 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
 
     /* try to connect.  */
     post("mp3cast~: connecting to port %d", portno);
-    ret = connect(sockfd, (struct sockaddr *) &server, sizeof (server));
+    ret = connect(sockfd, (struct sockaddr *)&server, sizeof (server));
     if (errno != EINPROGRESS)
     {
         pd_error(x, "mp3cast~: connection failed!\n");
@@ -787,9 +788,10 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     //     post("mp3cast~: server answered : %s", resp);
     // }
 
+    x->x_servaddr = server;
+    x->x_fd = sockfd;
     x->x_hostname = (char *)hostname->s_name;
     x->x_port = (int)fportno;
-    x->x_fd = sockfd;
     outlet_float(x->x_obj.ob_outlet, 1);
     post("mp3cast~: logged in to %s", hp->h_name);
 
@@ -984,10 +986,6 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
     char *icytitle = icytitle_arr;
     strncpy(icytitle, icytitle_s->s_name, 318);
 
-    struct          sockaddr_in server;
-    struct          hostent *hp;
-    int             portno = x->x_port;    /* get port from message box */
-
     /* variables used for communication with server */
     char            buffer[STRBUF_SIZE];
     char            *buf = buffer;
@@ -1008,24 +1006,11 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
         return;
     }
 
-    server.sin_family = AF_INET;
-    hp = gethostbyname(x->x_hostname);
-    if (hp == 0)
-    {
-        post("mp3cast~: bad host?");
-        close(sockfd);
-        return;
-    }
-    memcpy((char *)&server.sin_addr, (char *)hp->h_addr, hp->h_length);
-
-    /* assign client port number */
-    server.sin_port = htons((unsigned short)portno);
-
     // Set sockfd non-blocking, so we can use select()'s timeout
     mp3cast_sock_set_nonblocking(sockfd, 1);
 
     /* try to connect.  */
-    ret = connect(sockfd, (struct sockaddr *) &server, sizeof (server));
+    ret = connect(sockfd, (struct sockaddr *)&x->x_servaddr, sizeof (x->x_servaddr));
     if (errno != EINPROGRESS)
     {
         pd_error(x, "mp3cast~: connection failed!\n");
