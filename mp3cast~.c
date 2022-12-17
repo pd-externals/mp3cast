@@ -233,8 +233,23 @@ static void mp3cast_encode(t_mp3cast *x)
 static void mp3cast_stream(t_mp3cast *x)
 {
     int err = -1;            /* error return code */
+    int i = 0;
 
-    err = send(x->x_fd, x->x_mp3outbuf, x->x_mp3size, 0);
+    // set socket to non-blocking mode
+    if (fcntl(x->x_fd, F_SETFL, O_NONBLOCK) < 0) {
+        pd_error(x, "mp3cast~: could not set socket to non-blocking [errno %d]\n", errno);
+    }
+
+    while((err = send(x->x_fd, x->x_mp3outbuf, x->x_mp3size, 0)) < 0)
+    {
+        if ((errno == EWOULDBLOCK || errno == EAGAIN) && i < 4)
+        {
+            sleep(1);
+            i++;
+        } else {
+            break;
+        }
+    }
     if(err < 0)
     {
         pd_error(x, "mp3cast~: could not send encoded data to server (%d)", err);
