@@ -263,7 +263,11 @@ static void mp3cast_stream(t_mp3cast *x)
     {
         if ((errno == EWOULDBLOCK || errno == EAGAIN) && i < 4)
         {
+#ifdef _WIN32
+            Sleep(1000);
+#else
             sleep(1);
+#endif
             i++;
         } else {
             break;
