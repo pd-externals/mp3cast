@@ -1030,7 +1030,7 @@ static void mp3cast_icytitle(t_mp3cast *x, t_symbol *icytitle_s)
 
     /* try to connect.  */
     ret = connect(sockfd, (struct sockaddr *)&x->x_servaddr, sizeof (x->x_servaddr));
-    if (errno != EINPROGRESS)
+    if (errno != EINPROGRESS && errno != 0)
     {
         pd_error(x, "mp3cast~: connection failed!\n");
 #ifdef _WIN32
