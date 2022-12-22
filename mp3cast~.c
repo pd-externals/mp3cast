@@ -154,6 +154,25 @@ typedef struct _mp3cast
 } t_mp3cast;
 
 
+// borrowed from iemnet_sender.c
+static int mp3cast_sock_set_nonblocking(int socket, int nonblocking)
+{
+#ifdef _WIN32
+    u_long modearg = nonblocking;
+    if (ioctlsocket(socket, FIONBIO, &modearg) != NO_ERROR)
+        return -1;
+#else
+    int sockflags = fcntl(socket, F_GETFL, 0);
+    if (nonblocking)
+        sockflags |= O_NONBLOCK;
+    else
+        sockflags &= ~O_NONBLOCK;
+    if (fcntl(socket, F_SETFL, sockflags) < 0)
+        return -1;
+#endif
+    return 0;
+}
+
 /* encode PCM data to mp3 stream */
 static void mp3cast_encode(t_mp3cast *x)
 {
@@ -236,7 +255,7 @@ static void mp3cast_stream(t_mp3cast *x)
     int i = 0;
 
     // set socket to non-blocking mode
-    if (fcntl(x->x_fd, F_SETFL, O_NONBLOCK) < 0) {
+    if (mp3cast_sock_set_nonblocking(x->x_fd, 1) < 0) {
         pd_error(x, "mp3cast~: could not set socket to non-blocking [errno %d]\n", errno);
     }
 
@@ -472,25 +491,6 @@ char *mp3cast_base64_encode(char *data)
     *out = 0;
 
     return result;
-}
-
-// borrowed from iemnet_sender.c
-static int mp3cast_sock_set_nonblocking(int socket, int nonblocking)
-{
-#ifdef _WIN32
-    u_long modearg = nonblocking;
-    if (ioctlsocket(socket, FIONBIO, &modearg) != NO_ERROR)
-        return -1;
-#else
-    int sockflags = fcntl(socket, F_GETFL, 0);
-    if (nonblocking)
-        sockflags |= O_NONBLOCK;
-    else
-        sockflags &= ~O_NONBLOCK;
-    if (fcntl(socket, F_SETFL, sockflags) < 0)
-        return -1;
-#endif
-    return 0;
 }
 
 /* connect to server */
