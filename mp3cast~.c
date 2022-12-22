@@ -559,7 +559,7 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     /* try to connect.  */
     post("mp3cast~: connecting to port %d", portno);
     ret = connect(sockfd, (struct sockaddr *)&server, sizeof (server));
-    if (errno != EINPROGRESS || errno != 0)
+    if (errno != EINPROGRESS && errno != 0)
     {
         pd_error(x, "mp3cast~: connection failed!\n");
 #ifdef _WIN32
