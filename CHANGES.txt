@@ -1,3 +1,6 @@
+0.6 (by reduzent)
+   implement 'icy-title' method to update song title
+   implement 'timeout' method to limit connection waiting time
 0.5 (by rama)
    changed "ispublic" option to true as default
    added messages handling for setting stream info: url, genre, description, isPublic
