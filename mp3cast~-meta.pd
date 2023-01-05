@@ -2,7 +2,7 @@
 #N canvas 145 57 420 300 META 0;
 #X text 10 25 AUTHOR Yves Degoyon ydegoyon@gmail.com;
 #X text 10 59 LICENSE GPLv2;
-#X text 10 10 VERSION 0.5;
+#X text 10 10 VERSION 0.6;
 #X text 10 42 NAME mp3cast~;
 #X text 9 76 DESCRIPTION stream audio to an Icecast2 \, Icecast \,
 or Shoutcast server;
