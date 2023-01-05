@@ -66,6 +66,8 @@
 #include <lame/lame.h>        /* lame encoder stuff */
 #include "mpg123.h"
 
+#define CLASSNAME "mp3cast~"
+#define LIBVERSION "0.6"
 
 #define        MY_MP3_MALLOC_IN_SIZE        65536
 /* max size taken from lame readme */
@@ -73,8 +75,6 @@
 
 #define        MAXDATARATE 320        /* maximum mp3 data rate is 320kbit/s */
 #define        STRBUF_SIZE 1024
-
-static char   *mp3cast_version = "mp3cast~: mp3 streamer version 0.5, written by Yves Degoyon";
 
 // urlencoding stuff taken from: https://stackoverflow.com/a/21491633
 char urlenc_table[256] = {0};
@@ -875,7 +875,6 @@ static void mp3cast_mpeg(t_mp3cast *x, t_floatarg fsamplerate, t_floatarg fbitra
 static void mp3cast_print(t_mp3cast *x)
 {
     const char        * buf = 0;
-    logpost(NULL, 4, "%s", mp3cast_version);
     post("  LAME mp3 settings:\n"
          "    output sample rate: %d Hz\n"
          "    bitrate: %d kbit/s", x->x_samplerate, x->x_bitrate);
@@ -1165,7 +1164,7 @@ static void *mp3cast_new(void)
 
 void mp3cast_tilde_setup(void)
 {
-    logpost(NULL, 4, "%s", mp3cast_version);
+    logpost(NULL, 2, "[%s]: version %s", CLASSNAME, LIBVERSION );
     mp3cast_class = class_new(gensym("mp3cast~"), (t_newmethod)mp3cast_new, (t_method)mp3cast_free,
                               sizeof(t_mp3cast), 0, 0);
     CLASS_MAINSIGNALIN(mp3cast_class, t_mp3cast, x_f );
