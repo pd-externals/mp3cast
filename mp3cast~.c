@@ -523,6 +523,9 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     int    sockfd;
     int    ret;
 
+    /* clear errno before attempting to connect */
+    errno = 0;
+
     if(x->x_icecast == 0)portno++;    /* use SHOUTcast, portno is one higher */
 
     if (x->x_fd >= 0)
