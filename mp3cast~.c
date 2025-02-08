@@ -67,7 +67,7 @@
 #include "mpg123.h"
 
 #define CLASSNAME "mp3cast~"
-#define LIBVERSION "0.6"
+#define LIBVERSION "0.7"
 
 #define        MY_MP3_MALLOC_IN_SIZE        65536
 /* max size taken from lame readme */
