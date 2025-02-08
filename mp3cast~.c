@@ -67,7 +67,7 @@
 #include "mpg123.h"
 
 #define CLASSNAME "mp3cast~"
-#define LIBVERSION "0.6"
+#define LIBVERSION "0.7"
 
 #define        MY_MP3_MALLOC_IN_SIZE        65536
 /* max size taken from lame readme */
@@ -522,6 +522,9 @@ static void mp3cast_connect(t_mp3cast *x, t_symbol *hostname, t_floatarg fportno
     struct timeval  tv;
     int    sockfd;
     int    ret;
+
+    /* clear errno before attempting to connect */
+    errno = 0;
 
     if(x->x_icecast == 0)portno++;    /* use SHOUTcast, portno is one higher */
 
